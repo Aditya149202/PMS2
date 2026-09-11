@@ -1,0 +1,13 @@
+<Solution>
+  <Folder Name="/Services/">
+    <Project Path="Services/OrderService/OrderService.csproj" />
+    <Project Path="Services/SupplierInventoryService/SupplierInventoryService.csproj" />
+    <Project Path="Services/UserAuthService/UserAuthService.csproj" />
+  </Folder>
+  <Folder Name="/Tests/">
+    <Project Path="Tests/OrderService.Tests/OrderService.Tests.csproj" />
+    <Project Path="Tests/SupplierInventoryService.Tests/SupplierInventoryService.Tests.csproj" />
+    <Project Path="Tests/UserAuthService.Tests/UserAuthService.Tests.csproj" />
+  </Folder>
+  <Project Path="ApiGateway/ApiGateway.csproj" />
+</Solution>

@@ -1,0 +1,71 @@
+# Build folders
+[Bb]in/
+[Oo]bj/
+
+# Visual Studio
+.vs/
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+
+# Rider
+.idea/
+
+# VS Code
+.vscode/
+
+# NuGet
+packages/
+*.nupkg
+.nuget/
+
+# Logs
+*.log
+
+# Coverage
+coverage/
+coverage.*
+TestResults/
+
+# Publish output
+publish/
+
+# ASP.NET files
+wwwroot/lib/
+
+# Generated files
+Generated/
+*.generated.cs
+
+# OS Files
+.DS_Store
+Thumbs.db
+
+# Environment files
+.env
+.env.*
+
+# Secrets
+secrets.json
+
+# Local settings
+appsettings.Local.json
+
+# Entity Framework
+# KEEP migrations, do NOT ignore Migrations/
+# Migrations/
+
+# Docker
+docker-compose.override.yml
+
+# Temporary files
+tmp/
+temp/
+*.tmp
+
+# JetBrains
+_ReSharper*/
+*.DotSettings.user
+
+**/private.key
