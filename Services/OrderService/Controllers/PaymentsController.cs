@@ -7,7 +7,7 @@ using OrderService.Services;
 namespace OrderService.Controllers;
 
 [ApiController]
-[Route("payments")]
+[Route("api/payments")]
 public class PaymentsController : ControllerBase
 {
     private readonly IPaymentService _paymentService;

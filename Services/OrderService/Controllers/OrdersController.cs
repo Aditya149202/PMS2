@@ -8,7 +8,7 @@ using OrderService.Services;
 namespace OrderService.Controllers;
 
 [ApiController]
-[Route("orders")]
+[Route("api/orders")]
 [Authorize] // default: any authenticated role, same split pattern as DrugsController
 public class OrdersController : ControllerBase
 {
