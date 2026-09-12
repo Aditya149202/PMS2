@@ -36,11 +36,15 @@ builder.Services.AddScoped<IPaymentService, PaymentService>();
 // calls and background-job-triggered calls (e.g. stale-order auto-cancel).
 builder.Services.AddHostedService<StaleOrderAutoCancelJob>();
 builder.Services.AddHostedService<StockReservationExpiryJob>();
+
 builder.Services.AddHttpClient<ISupplierInventoryClient, SupplierInventoryClient>(client =>
 {
     client.BaseAddress = new Uri(builder.Configuration["SupplierInventoryService:BaseUrl"]!);
     client.DefaultRequestHeaders.Add("X-Internal-Api-Key", builder.Configuration["InternalApi:Key"]);
 });
+builder.Services.AddScoped<IPaymentGatewayClient, RazorpayGatewayClient>();
+//builder.Services.AddScoped<IPaymentGatewayClient, MockPaymentGatewayClient>();
+
 
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(options =>

@@ -1,7 +1,5 @@
-using System.Security.Cryptography;
-using System.Text;
+
 using System.Text.Json;
-using Razorpay.Api;
 using OrderService.Clients;
 using OrderService.Entities;
 using OrderService.Enums;
@@ -18,18 +16,19 @@ public class PaymentService : IPaymentService
     private readonly IPaymentIntentRepository _paymentIntentRepository;
     private readonly IOrderRepository _orderRepository;
     private readonly ISupplierInventoryClient _supplierInventoryClient;
-    private readonly IConfiguration _config;
+    private readonly IPaymentGatewayClient _paymentGatewayClient;
 
     public PaymentService(
         IPaymentIntentRepository paymentIntentRepository,
         IOrderRepository orderRepository,
         ISupplierInventoryClient supplierInventoryClient,
-        IConfiguration config)
+        IPaymentGatewayClient paymentGatewayClient
+        )
     {
         _paymentIntentRepository = paymentIntentRepository;
         _orderRepository = orderRepository;
         _supplierInventoryClient = supplierInventoryClient;
-        _config = config;
+        _paymentGatewayClient = paymentGatewayClient;
     }
 
     public async Task<PaymentInitiateResponse> InitiatePaymentAsync(
@@ -80,25 +79,15 @@ public class PaymentService : IPaymentService
 
         var totalAmount = snapshotItems.Sum(i => i.Quantity * i.UnitPrice);
 
-        var client = new RazorpayClient(_config["Razorpay:KeyId"], _config["Razorpay:KeySecret"]);
-        var options = new Dictionary<string, object>
-        {
-            { "amount", (int)(totalAmount * 100) }, // paise, not rupees
-            { "currency", "INR" },
-            { "receipt", paymentIntent.Id.ToString() }
-        };
-        RazorpayOrder razorpayOrder = client.Order.Create(options);
+        var razorpayOrder = await _paymentGatewayClient.CreateOrderAsync(totalAmount, "INR", paymentIntent.Id.ToString());
 
-        // SAVE #2 — real Razorpay order id, final amount, and server-side-priced item
-        // snapshot are all known now.
-        paymentIntent.RazorpayOrderId = razorpayOrder["id"].ToString();
+        paymentIntent.RazorpayOrderId = razorpayOrder.GatewayOrderId;
         paymentIntent.Amount = totalAmount;
         paymentIntent.ItemsSnapshot = JsonSerializer.Serialize(snapshotItems);
         paymentIntent.UpdatedAt = DateTime.UtcNow;
         await _paymentIntentRepository.SaveChangesAsync();
 
-        return new PaymentInitiateResponse(
-            paymentIntent.Id, paymentIntent.RazorpayOrderId, totalAmount, "INR", _config["Razorpay:KeyId"]!);
+        return new PaymentInitiateResponse(paymentIntent.Id, paymentIntent.RazorpayOrderId,totalAmount,"INR", razorpayOrder.KeyId);
     }
 
     // public async Task HandleWebhookAsync(string rawBody, string signature)
@@ -167,7 +156,7 @@ public class PaymentService : IPaymentService
 // Razorpay's API for payments with no matching completed Order.
 public async Task<PaymentStatusResponse> ConfirmPaymentAsync(int doctorId,string doctorName, PaymentConfirmRequest request)
 {
-    if (!VerifyPaymentSignature(request.RazorpayOrderId, request.RazorpayPaymentId, request.RazorpaySignature))
+    if (!_paymentGatewayClient.VerifySignature(request.RazorpayOrderId, request.RazorpayPaymentId, request.RazorpaySignature))
         throw new InvalidPaymentSignatureException();
 
     var paymentIntent = await _paymentIntentRepository.GetByRazorpayOrderIdAsync(request.RazorpayOrderId)
@@ -227,16 +216,16 @@ public async Task<PaymentStatusResponse> ConfirmPaymentAsync(int doctorId,string
             paymentIntent.Order?.Id);
     }
 
-    private bool VerifyPaymentSignature(string razorpayOrderId, string razorpayPaymentId, string signature)
-{
-    var secret = _config["Razorpay:KeySecret"]!;
-    var payload = $"{razorpayOrderId}|{razorpayPaymentId}";
-    using var hmac = new HMACSHA256(Encoding.UTF8.GetBytes(secret));
-    var computedHash = hmac.ComputeHash(Encoding.UTF8.GetBytes(payload));
-    var computedSignature = Convert.ToHexString(computedHash).ToLowerInvariant();
-    return CryptographicOperations.FixedTimeEquals(
-        Encoding.UTF8.GetBytes(computedSignature), Encoding.UTF8.GetBytes(signature));
-}
+//     private bool VerifyPaymentSignature(string razorpayOrderId, string razorpayPaymentId, string signature)
+// {
+//     var secret = _config["Razorpay:KeySecret"]!;
+//     var payload = $"{razorpayOrderId}|{razorpayPaymentId}";
+//     using var hmac = new HMACSHA256(Encoding.UTF8.GetBytes(secret));
+//     var computedHash = hmac.ComputeHash(Encoding.UTF8.GetBytes(payload));
+//     var computedSignature = Convert.ToHexString(computedHash).ToLowerInvariant();
+//     return CryptographicOperations.FixedTimeEquals(
+//         Encoding.UTF8.GetBytes(computedSignature), Encoding.UTF8.GetBytes(signature));
+// }
 
     public async Task ExpiredPaymentIntentAsync(int paymentIntentId)
     {
