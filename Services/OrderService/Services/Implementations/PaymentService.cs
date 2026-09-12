@@ -238,5 +238,19 @@ public async Task<PaymentStatusResponse> ConfirmPaymentAsync(int doctorId,string
         Encoding.UTF8.GetBytes(computedSignature), Encoding.UTF8.GetBytes(signature));
 }
 
+    public async Task ExpiredPaymentIntentAsync(int paymentIntentId)
+    {
+        var paymentIntent = await _paymentIntentRepository.GetByIdAsync(paymentIntentId)
+            ?? throw new NotFoundException($"PaymentIntent {paymentIntentId} not found.");
+
+        if (paymentIntent.Status != PaymentIntentStatus.CREATED.ToString())
+            return;
+
+        await _supplierInventoryClient.ReleaseReservationAsync(paymentIntent.Id);
+
+        paymentIntent.Status = PaymentIntentStatus.EXPIRED.ToString();
+        paymentIntent.UpdatedAt = DateTime.UtcNow;
+        await _paymentIntentRepository.SaveChangesAsync();
+    }
     private record SnapshotItem(int DrugId, string DrugName, int Quantity, decimal UnitPrice);
 }

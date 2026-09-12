@@ -12,5 +12,6 @@ public interface IPaymentIntentRepository
     // Needed for the Razorpay webhook, which arrives keyed by razorpay_order_id, not our internal id.
     Task<PaymentIntent?> GetByRazorpayOrderIdAsync(string razorpayOrderId);
 
+    Task<List<PaymentIntent>> GetExpiredPaymentIntentsAsync(DateTime cutoff);
     Task SaveChangesAsync();
 }

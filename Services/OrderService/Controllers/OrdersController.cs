@@ -59,6 +59,7 @@ public class OrdersController : ControllerBase
 
     }
 
+    
     // NOTE: assumes the "sub" claim maps to ClaimTypes.NameIdentifier, matching the
     // ASP.NET Core default JWT claim-type mapping. Verify this against whatever
     // TokenService.GenerateAccessToken actually issues — if that mapping was cleared

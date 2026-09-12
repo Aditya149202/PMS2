@@ -31,6 +31,12 @@ public class PaymentIntentRepository : IPaymentIntentRepository
         return await _context.PaymentIntents
             .FirstOrDefaultAsync(p => p.RazorpayOrderId == razorpayOrderId);
     }
+    public async Task<List<PaymentIntent>> GetExpiredPaymentIntentsAsync(DateTime cutoff)
+    {
+        return await _context.PaymentIntents
+            .Where(p => p.Status == Enums.PaymentIntentStatus.CREATED.ToString() && p.CreatedAt < cutoff)
+            .ToListAsync();
+    }
 
     public async Task SaveChangesAsync()
     {

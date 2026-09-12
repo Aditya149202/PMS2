@@ -10,6 +10,7 @@ using OrderService.ExceptionMiddleware;
 using OrderService.Repositories.Implementations;
 using OrderService.Repositories.Interfaces;
 using Microsoft.OpenApi;
+using OrderService.BackgroundService;
 using OrderService.Services;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -21,6 +22,7 @@ builder.Services.AddDbContext<OrdersDbContext>(options =>
 // ---------- Repositories ----------
 builder.Services.AddScoped<IOrderRepository, OrderRepository>();
 builder.Services.AddScoped<IPaymentIntentRepository, PaymentIntentRepository>();
+//builder.Services.AddScoped<IStockReservationRepository, StockReservationRepository>();
 
 // ---------- Services ----------
 // Fully-qualified on the implementation side — "OrderService" is both the project's
@@ -32,6 +34,8 @@ builder.Services.AddScoped<IPaymentService, PaymentService>();
 // Shared-key auth, not JWT-forwarding — see prior decision. Attached once here at
 // HttpClient configuration time so it works identically for controller-triggered
 // calls and background-job-triggered calls (e.g. stale-order auto-cancel).
+builder.Services.AddHostedService<StaleOrderAutoCancelJob>();
+builder.Services.AddHostedService<StockReservationExpiryJob>();
 builder.Services.AddHttpClient<ISupplierInventoryClient, SupplierInventoryClient>(client =>
 {
     client.BaseAddress = new Uri(builder.Configuration["SupplierInventoryService:BaseUrl"]!);

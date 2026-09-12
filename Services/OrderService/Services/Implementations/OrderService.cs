@@ -61,8 +61,7 @@ public class OrderService : IOrderService
             ?? throw new NotFoundException($"Order {id} not found.");
 
         if (order.Status != OrderStatus.NEW.ToString())
-            throw new AppValidationException(
-                new Dictionary<string,string[]>{["order"]=new[]{$"Order {id} cannot be verified from status {order.Status}. Only NEW orders can be verified."}});
+            throw new InvalidOrderStateException($"Order {id} cannot be verified from status {order.Status}. Only NEW orders can be verified.");
 
         order.Status = OrderStatus.VERIFIED.ToString();
         order.VerifiedAt = DateTime.UtcNow;
@@ -82,8 +81,7 @@ public class OrderService : IOrderService
             ?? throw new NotFoundException($"Order {id} not found.");
 
         if (order.Status != OrderStatus.VERIFIED.ToString())
-            throw new AppValidationException(
-                new Dictionary<string,string[]>{["order"]=new[]{$"Order {id} cannot be pickedup from status {order.Status}. Only verified orders can be pickeup."}});
+            throw new InvalidOrderStateException($"Order {id} cannot be pickedup from status {order.Status}. Only verified orders can be pickeup.");
 
         await _supplierInventoryClient.CommitSaleAsync(order.Id, order.PaymentIntentId, order.TotalAmount);
 
@@ -111,8 +109,7 @@ public class OrderService : IOrderService
         : new[] { OrderStatus.NEW, OrderStatus.VERIFIED };
 
     if (!allowedStatuses.Contains(Enum.Parse<OrderStatus>(order.Status, ignoreCase: true)))
-        throw new AppValidationException(
-            new Dictionary<string,string[]>{["order"]=new[]{$"Order {id} cannot be cancelled from status {order.Status} by {cancelledBy}."}});
+        throw new InvalidOrderStateException($"Order {id} cannot be cancelled from status {order.Status} by {cancelledBy}.");
 
     await _supplierInventoryClient.ReleaseReservationAsync(order.PaymentIntentId);
 
@@ -123,6 +120,8 @@ public class OrderService : IOrderService
 
     return ToOrderResponse(order);
 }
+
+
 
     private static OrderResponse ToOrderResponse(Order o) => new(
         o.Id, o.DoctorId, o.DoctorNameSnapshot, Enum.Parse<OrderStatus>(o.Status, ignoreCase: true), o.TotalAmount, o.CreatedAt,

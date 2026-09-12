@@ -19,7 +19,7 @@ public interface IOrderRepository
 
     // For the stale-order auto-cancel job. Threshold hours is not locked yet, so the cutoff
     // is computed by the caller and passed in — this repo method has no opinion on the duration.
-    Task<List<Order>> GetStaleOrdersAsync(DateTime cutoff, IReadOnlyCollection<OrderStatus> statuses);
+    Task<List<Order>> GetStaleOrdersAsync(DateTime newCutoff, DateTime verifiedCutoff);
 
     Task SaveChangesAsync();
 }

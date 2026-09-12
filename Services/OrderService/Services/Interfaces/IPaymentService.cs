@@ -7,5 +7,6 @@ public interface IPaymentService
     Task<PaymentStatusResponse> ConfirmPaymentAsync(int doctorId, string doctorName, PaymentConfirmRequest request);
     Task<PaymentStatusResponse> GetPaymentStatusAsync(int paymentIntentId, int? requestingDoctorId);
 
+    Task ExpiredPaymentIntentAsync(int paymentIntentId);
     //bool VerifyPaymentSignature(string razorpayOrderId, string razorpayPaymentId, string signature);
 }

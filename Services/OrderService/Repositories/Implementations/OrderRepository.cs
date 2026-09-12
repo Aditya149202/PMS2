@@ -59,14 +59,13 @@ public class OrderRepository : IOrderRepository
         return (items, totalCount);
     }
 
-    public async Task<List<Order>> GetStaleOrdersAsync(DateTime cutoff, IReadOnlyCollection<OrderStatus> statuses)
+    public async Task<List<Order>> GetStaleOrdersAsync(DateTime newCutoff, DateTime verifiedCutoff)
     {
-        var statusNames = statuses
-        .Select(status => status.ToString())
-        .ToList();
+        
 
         return await _context.Orders
-            .Where(o => statusNames.Contains(o.Status) && o.CreatedAt < cutoff)
+            .Where(o => (o.Status == OrderStatus.NEW.ToString() && o.CreatedAt < newCutoff) ||
+                        (o.Status == OrderStatus.VERIFIED.ToString() && o.VerifiedAt.HasValue && o.VerifiedAt.Value < verifiedCutoff))
             .ToListAsync();
     }
 
