@@ -42,7 +42,17 @@ builder.Services.AddHttpClient<ISupplierInventoryClient, SupplierInventoryClient
     client.BaseAddress = new Uri(builder.Configuration["SupplierInventoryService:BaseUrl"]!);
     client.DefaultRequestHeaders.Add("X-Internal-Api-Key", builder.Configuration["InternalApi:Key"]);
 });
-builder.Services.AddScoped<IPaymentGatewayClient, RazorpayGatewayClient>();
+
+var paymentGatewayProvider = builder.Configuration["PaymentGateway:Provider"]??"Mock";
+if (string.Equals(paymentGatewayProvider, "Razorpay", StringComparison.OrdinalIgnoreCase))
+{
+    builder.Services.AddScoped<IPaymentGatewayClient, RazorpayGatewayClient>();
+}
+else
+{
+    builder.Services.AddScoped<IPaymentGatewayClient, MockPaymentGatewayClient>();
+} 
+//builder.Services.AddScoped<IPaymentGatewayClient, RazorpayGatewayClient>();
 //builder.Services.AddScoped<IPaymentGatewayClient, MockPaymentGatewayClient>();
 
 
