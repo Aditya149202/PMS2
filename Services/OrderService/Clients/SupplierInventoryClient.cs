@@ -78,7 +78,7 @@ public class SupplierInventoryClient : ISupplierInventoryClient
         PaymentIntentId = paymentIntentId,
         Items = items.Select(i => new { DrugId = i.DrugId, Quantity = i.Quantity })
     };
-    var response = await _httpClient.PostAsJsonAsync("/internal/stock/reserve", payload);
+    var response = await _httpClient.PostAsJsonAsync("internal/stock/reserve", payload);
 
     if (!response.IsSuccessStatusCode)
     {

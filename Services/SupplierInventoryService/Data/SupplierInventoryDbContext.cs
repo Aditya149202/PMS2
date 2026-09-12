@@ -103,7 +103,8 @@ public class SupplierInventoryDbContext : DbContext
             entity.ToTable("ProcessedEvents");
 
             entity.HasKey(pe => pe.OrderId);
-
+            entity.Property(pe => pe.OrderId)
+                .ValueGeneratedNever();
             entity.Property(pe => pe.ProcessedAt)
                 .HasDefaultValueSql("GETUTCDATE()");
         });

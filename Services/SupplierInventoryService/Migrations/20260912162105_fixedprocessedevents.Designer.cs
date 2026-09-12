@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using SupplierInventoryService.Data;
 
@@ -11,9 +12,11 @@ using SupplierInventoryService.Data;
 namespace SupplierInventoryService.Migrations
 {
     [DbContext(typeof(SupplierInventoryDbContext))]
-    partial class SupplierInventoryDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260912162105_fixedprocessedevents")]
+    partial class fixedprocessedevents
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
