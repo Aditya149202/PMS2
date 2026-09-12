@@ -34,6 +34,7 @@ builder.Services.AddScoped<IProcessedEventRepository, ProcessedEventRepository>(
 builder.Services.AddScoped<ISupplierService, SupplierService>();
 builder.Services.AddScoped<IDrugService, DrugService>();
 builder.Services.AddScoped<IInternalService, InternalService>();
+builder.Services.AddScoped<IReportService,ReportService>();
 
 
 // --- Controllers ---
