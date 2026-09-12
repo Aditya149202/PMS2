@@ -3,11 +3,12 @@ using Microsoft.IdentityModel.Tokens;
 using System.Security.Cryptography;
 using Microsoft.OpenApi;
 using System.Text.Json;
-
+using System.Text.Json.Nodes;
+using Microsoft.AspNetCore.Mvc;
 var builder = WebApplication.CreateBuilder(args);
 
 
-
+builder.Services.AddHttpClient();
 
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(options =>
@@ -83,23 +84,52 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
         
     });
 
-builder.Services.AddAuthorization(options =>
-{
-   options.AddPolicy("default", policy =>
-   {
-       policy.RequireAuthenticatedUser();
-   });
-});
+builder.Services.AddAuthorization();
+
+
 
 builder.Services.AddReverseProxy()
     .LoadFromConfig(builder.Configuration.GetSection("ReverseProxy"));
 var app = builder.Build();
+app.MapGet("/gateway.json", async (IHttpClientFactory httpClientFactory, IConfiguration config) =>
+{
+    var sources = config.GetSection("SwaggerAggregator:SourceUrls").Get<string[]>() ?? Array.Empty<string>();
 
+    var client = httpClientFactory.CreateClient();
+    JsonObject? merged = null;
+
+    foreach (var url in sources)
+    {
+        var json = await client.GetStringAsync(url);
+        var doc = JsonNode.Parse(json)!.AsObject();
+
+        if (merged is null)
+        {
+            merged = doc;
+            merged["info"] = new JsonObject { ["title"] = "PMS Combined API", ["version"] = "v1" };
+            continue;
+        }
+
+        var mergedPaths = merged["paths"]!.AsObject();
+        foreach (var (path, value) in doc["paths"]!.AsObject())
+            mergedPaths[path] = value?.DeepClone();
+
+        var mergedSchemas = merged["components"]!["schemas"]!.AsObject();
+        if (doc["components"]?["schemas"] is JsonObject schemas)
+            foreach (var (name, value) in schemas)
+                mergedSchemas[name] = value?.DeepClone();
+    }
+
+    return Results.Text(merged!.ToJsonString(), "application/json");
+});
 
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
-    app.UseSwaggerUI();
+    app.UseSwaggerUI(options =>
+    {
+        options.SwaggerEndpoint("/gateway.json", "PMS Combined API v1");
+    });
 }
 
 app.UseHttpsRedirection();
