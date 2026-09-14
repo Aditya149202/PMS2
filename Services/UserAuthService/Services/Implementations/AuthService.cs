@@ -57,7 +57,7 @@ public class AuthService : IAuthService
     public async Task<LoginResponse> LoginAsync(LoginRequest request)
     {
         var exists=await _userRepository.GetByEmailAsync(request.Email) ??
-            throw new NotFoundException("User is not signed up");
+            throw new InvalidCredentialsException();
         var pass=_passwordHasher.VerifyHashedPassword(exists,exists.PasswordHash,request.Password);
         if (pass == PasswordVerificationResult.Failed)
         {
@@ -96,7 +96,7 @@ public class AuthService : IAuthService
             throw new InvalidCredentialsException(); // reused/revoked token — treat as compromised
         if (token.ExpiresAt < DateTime.UtcNow)
             throw new TokenExpiredException("token is expired");
-
+ 
         token.RevokedAt=DateTime.UtcNow;
 
         var accessToken=_tokenService.GenerateAccessToken(token.User);

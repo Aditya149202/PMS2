@@ -18,9 +18,13 @@ public class TokenServiceTests
     [SetUp]
     public void Setup()
     {
+        using var rsa = RSA.Create(2048);
+
+        var privateKey = rsa.ExportPkcs8PrivateKeyPem();
+
         var configValues = new Dictionary<string, string?>
         {
-            { "Jwt:Key", "this-is-a-test-signing-key-at-least-32-chars-long" },
+            { "Jwt:PrivateKey", privateKey },
             { "Jwt:Issuer", "TestIssuer" },
             { "Jwt:Audience", "TestAudience" }
         };
@@ -38,7 +42,7 @@ public class TokenServiceTests
         var user = new User
         {
             Id = 42,
-            Email = "john@test.com",
+            Name = "john@test.com",
             Role = new Role { Id = 1, Name = "DOCTOR" }
         };
 
@@ -53,7 +57,8 @@ public class TokenServiceTests
     [Test]
     public void GenerateAccessToken_Should_Expire_In_Future()
     {
-        var user = new User { Id = 1, Role = new Role { Name = "DOCTOR" } };
+        var user = new User { Id = 1,Name = "John Doe", Role = new Role { Name = "DOCTOR" } };
+        
         var token = _tokenService.GenerateAccessToken(user);
         var jwt = new JwtSecurityTokenHandler().ReadJwtToken(token);
 
