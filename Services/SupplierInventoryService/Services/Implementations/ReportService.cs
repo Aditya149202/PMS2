@@ -2,6 +2,8 @@ using SupplierInventoryService.DTOs;
 using SupplierInventoryService .Repositories.Interfaces;
 using SupplierInventoryService.Services.Interfaces;
 
+namespace SupplierInventoryService.Services.Implementations;
+
 public class ReportService : IReportService
 {
     private readonly ISalesRepository _salesRepository;
