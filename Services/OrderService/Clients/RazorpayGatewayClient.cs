@@ -16,7 +16,12 @@ public class RazorpayGatewayClient : IPaymentGatewayClient
 
     public Task<PaymentGatewayOrder> CreateOrderAsync(decimal amount, string currency, string receiptId)
     {
-        var client = new RazorpayClient(_config["Razorpay:KeyId"], _config["Razorpay:KeySecret"]);
+        var client = new RazorpayClient(_config["Razorpay:KeyId"].Trim(), _config["Razorpay:KeySecret"].Trim());
+        var keyId = _config["Razorpay:KeyId"];
+var keySecret = _config["Razorpay:KeySecret"];
+
+Console.WriteLine($"KeyId: {keyId}");
+Console.WriteLine($"Secret Length: {keySecret?.Length}");
         var options = new Dictionary<string, object>
         {
             { "amount", (int)(amount * 100) }, // Amount in paise
@@ -24,10 +29,10 @@ public class RazorpayGatewayClient : IPaymentGatewayClient
             { "receipt", receiptId }
         };
         RazorpayOrder order = client.Order.Create(options);
-
+        Console.WriteLine(order);
         return Task.FromResult(new PaymentGatewayOrder
         (
-            order["Id"].ToString(),_config["Razorpay:KeyId"]!));
+            order["id"].ToString(),_config["Razorpay:KeyId"]!));
     }
 
     public bool VerifySignature(string orderId, string paymentId, string signature)

@@ -3,6 +3,8 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using OrderService.DTOs;
 using OrderService.Services;
+using System.Text;
+using System.Security.Cryptography;
 
 namespace OrderService.Controllers;
 
@@ -11,10 +13,12 @@ namespace OrderService.Controllers;
 public class PaymentsController : ControllerBase
 {
     private readonly IPaymentService _paymentService;
+    private readonly IConfiguration _configuration;
 
-    public PaymentsController(IPaymentService paymentService)
+    public PaymentsController(IPaymentService paymentService,IConfiguration configuration)
     {
         _paymentService = paymentService;
+        _configuration=configuration;
     }
 
     [HttpPost("initiate")]
@@ -47,5 +51,19 @@ public class PaymentsController : ControllerBase
     {
         var requestingDoctorId = User.IsInRole("ADMIN") ? (int?)null : int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
         return Ok(await _paymentService.GetPaymentStatusAsync(id, requestingDoctorId));
+    }
+    //TO BE REMOVED: dummy signature generator
+    [HttpGet("test-signature")]
+    public IActionResult TestSignature(string orderId, string paymentId)
+    {
+        var payload = $"{orderId}|{paymentId}";
+        var secret = _configuration["Razorpay:KeySecret"]!;
+
+        using var hmac = new HMACSHA256(Encoding.UTF8.GetBytes(secret));
+        var hash = hmac.ComputeHash(Encoding.UTF8.GetBytes(payload));
+
+        var signature = Convert.ToHexString(hash).ToLowerInvariant();
+
+        return Ok(signature);
     }
 }

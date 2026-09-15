@@ -116,6 +116,7 @@ builder.Services.AddAuthorization();
 
 var app = builder.Build();
 
+app.UseMiddleware<UserExceptionMiddleware>();
 using (var scope = app.Services.CreateScope())
 {
     var services = scope.ServiceProvider;
@@ -145,8 +146,6 @@ using (var scope = app.Services.CreateScope())
         await userRepo.SaveChangesAsync();
     }
 }
-// Configure the HTTP request pipeline.
-app.UseMiddleware<UserExceptionMiddleware>(); // your existing exception middleware — register if not already
 
 
 app.UseAuthentication();
