@@ -12,6 +12,7 @@ using OrderService.Repositories.Interfaces;
 using Microsoft.OpenApi;
 using OrderService.BackgroundService;
 using OrderService.Services;
+using System.Text.Json.Serialization;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -136,7 +137,7 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
 builder.Services.AddAuthorization();
 
 // ---------- Controllers ----------
-builder.Services.AddControllers();
+builder.Services.AddControllers().AddJsonOptions(op=>op.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter()));
 
 // ---------- Swagger ----------
 // Swashbuckle 10.x-compatible syntax — Microsoft.OpenApi namespace, not

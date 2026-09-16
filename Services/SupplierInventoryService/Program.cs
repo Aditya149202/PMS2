@@ -17,6 +17,7 @@ using Swashbuckle.AspNetCore;
 using Microsoft.OpenApi;
 using System.Security.Cryptography;
 using SupplierInventoryService.Auth;
+using System.Text.Json.Serialization;
 var builder = WebApplication.CreateBuilder(args);
 
 // --- EF Core ---
@@ -38,7 +39,8 @@ builder.Services.AddScoped<IReportService,ReportService>();
 
 
 // --- Controllers ---
-builder.Services.AddControllers();
+builder.Services.AddControllers().AddJsonOptions(op=>op.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter()));
+;
 
 // --- Swagger ---
 builder.Services.AddEndpointsApiExplorer();
@@ -113,7 +115,7 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
                 await context.Response.WriteAsync(JsonSerializer.Serialize(problem));
             }
         };
-    }).AddScheme<ApiKeyAuthenticationOptions,ApiKeyAuthenticationHandler>(ApiKeyAuthenticationOptions.SchemeName,options=>{});
+    }).AddScheme<ApiKeyAuthenticationOptions,ApiKeyAuthenticationHandler>(ApiKeyAuthenticationOptions.SchemeName,noexecution=>{});
 
 builder.Services.AddAuthorization();
 

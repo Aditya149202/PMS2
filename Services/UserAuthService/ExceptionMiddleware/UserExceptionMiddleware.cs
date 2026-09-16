@@ -92,7 +92,6 @@ public class UserExceptionMiddleware
                     {
                         Status = statusCode,
                         Title = "An unexpected error occurred.",
-                        // Never leak stack traces / internal messages to the client in non-dev envs.
                         Detail = _env.IsDevelopment() ? e.ToString() : "Please contact support if the problem persists.",
                         Extensions = { ["traceId"] = traceId }
                     };
