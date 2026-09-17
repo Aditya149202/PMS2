@@ -216,16 +216,7 @@ public async Task<PaymentStatusResponse> ConfirmPaymentAsync(int doctorId,string
             paymentIntent.Order?.Id);
     }
 
-//     private bool VerifyPaymentSignature(string razorpayOrderId, string razorpayPaymentId, string signature)
-// {
-//     var secret = _config["Razorpay:KeySecret"]!;
-//     var payload = $"{razorpayOrderId}|{razorpayPaymentId}";
-//     using var hmac = new HMACSHA256(Encoding.UTF8.GetBytes(secret));
-//     var computedHash = hmac.ComputeHash(Encoding.UTF8.GetBytes(payload));
-//     var computedSignature = Convert.ToHexString(computedHash).ToLowerInvariant();
-//     return CryptographicOperations.FixedTimeEquals(
-//         Encoding.UTF8.GetBytes(computedSignature), Encoding.UTF8.GetBytes(signature));
-// }
+
 
     public async Task ExpiredPaymentIntentAsync(int paymentIntentId)
     {

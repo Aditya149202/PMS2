@@ -14,9 +14,7 @@ public class SupplierInventoryClient : ISupplierInventoryClient
         _httpClient = httpClient;
     }
 
-    // Forwards the caller's own bearer token so SupplierInventoryService's
-    // [Authorize(Roles="ADMIN")] on the internal endpoint validates normally.
-    // See flag above — this is a real decision, not an oversight.
+    
     
 
     public async Task CommitSaleAsync(int orderId, int paymentIntentId, decimal totalAmount)
