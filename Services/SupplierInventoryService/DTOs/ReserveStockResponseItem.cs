@@ -1,3 +1,4 @@
+using System.ComponentModel.DataAnnotations;
 namespace SupplierInventoryService.DTOs;
 
 public record ReserveStockResponseItem(

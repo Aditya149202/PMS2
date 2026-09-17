@@ -1,5 +1,5 @@
 using OrderService.Enums;
-
+using System.ComponentModel.DataAnnotations;
 namespace OrderService.DTOs;
 
 // Bound from query string on GET /orders. Filtering is by exact DoctorId (int), never by name —
@@ -10,6 +10,6 @@ public record OrderFilterRequest(
     DateTime? DateFrom,
     DateTime? DateTo,
     int? DrugId,
-    int Page = 1,
-    int Size = 20
+    [Range(1,int.MaxValue)]int Page = 1,
+    [Range(1,100)]int Size = 20
 );

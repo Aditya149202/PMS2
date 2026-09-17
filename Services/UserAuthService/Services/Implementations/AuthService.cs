@@ -124,6 +124,7 @@ public class AuthService : IAuthService
             TokenHash=_tokenService.HashToken(refresh),
             ExpiresAt=DateTime.UtcNow.AddMinutes(5)
         });
+        Console.WriteLine(refresh);
         await _passwordResetTokenRepository.SaveChangesAsync();
 
         await _emailService.SendPasswordResetAsync(user.Email,refresh);

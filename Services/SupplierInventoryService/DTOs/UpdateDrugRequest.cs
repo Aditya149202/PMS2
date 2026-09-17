@@ -1,2 +1,3 @@
+using System.ComponentModel.DataAnnotations;
 namespace SupplierInventoryService.DTOs;
-public record UpdateDrugRequest(string Name, decimal Price, int QuantityInStock, bool IsActive);
+public record UpdateDrugRequest([Required,StringLength(200,MinimumLength =1)]string Name,[Range(0.01,double.MaxValue)] decimal Price,[Range(0,int.MaxValue)] int QuantityInStock, bool IsActive);
