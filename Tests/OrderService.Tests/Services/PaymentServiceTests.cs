@@ -16,6 +16,8 @@ public class PaymentServiceTests
     private Mock<IOrderRepository> _orderRepo;
     private Mock<ISupplierInventoryClient> _supplierInventoryClient;
     private Mock<IPaymentGatewayClient> _paymentGatewayClient;
+
+    private Mock<IOrderEmailService> _orderEmailService;
     private PaymentService _sut;
 
     [SetUp]
@@ -25,12 +27,13 @@ public class PaymentServiceTests
         _orderRepo = new Mock<IOrderRepository>();
         _supplierInventoryClient = new Mock<ISupplierInventoryClient>();
         _paymentGatewayClient = new Mock<IPaymentGatewayClient>();
-
+        _orderEmailService = new Mock<IOrderEmailService>();
         _sut = new PaymentService(
             _paymentIntentRepo.Object,
             _orderRepo.Object,
             _supplierInventoryClient.Object,
-            _paymentGatewayClient.Object);
+            _paymentGatewayClient.Object,
+            _orderEmailService.Object);
     }
 
     [Test]

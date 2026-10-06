@@ -41,8 +41,8 @@ public class PaymentsController : ControllerBase
         var doctorName = User.FindFirstValue(ClaimTypes.Name)
             ?? throw new InvalidOperationException("JWT is missing the required name claim.");
 
-        
-        return Ok(await _paymentService.ConfirmPaymentAsync(doctorId,doctorName, request));
+        var doctorEmail = User.FindFirstValue(ClaimTypes.Email);
+return Ok(await _paymentService.ConfirmPaymentAsync(doctorId, doctorName, request, doctorEmail));
     }
 
     [HttpGet("{id}/status")]

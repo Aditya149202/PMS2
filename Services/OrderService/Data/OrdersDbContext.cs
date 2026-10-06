@@ -42,7 +42,9 @@ public class OrdersDbContext : DbContext
                 .HasDefaultValueSql("GETUTCDATE()");
 
             
-
+            entity.Property(p => p.DoctorNameSnapshot)
+                .HasMaxLength(100)
+                .IsRequired();
             entity.HasIndex(p => p.RazorpayOrderId).IsUnique();
             entity.HasIndex(p => p.DoctorId);
             entity.HasIndex(p => new { p.Status, p.CreatedAt });
