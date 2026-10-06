@@ -25,6 +25,8 @@ public class TokenService : ITokenService
             new(ClaimTypes.Role, user.Role.Name), // requires User.Role loaded — caller's responsibility
             new(ClaimTypes.Name, user.Name)
         };
+        if (!string.IsNullOrWhiteSpace(user.Email))
+    claims.Add(new Claim(ClaimTypes.Email, user.Email));
         var rsa=RSA.Create();
         rsa.ImportFromPem(_config["Jwt:PrivateKey"]!);
         var key = new RsaSecurityKey(rsa);

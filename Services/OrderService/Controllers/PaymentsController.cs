@@ -52,18 +52,5 @@ public class PaymentsController : ControllerBase
         var requestingDoctorId = User.IsInRole("ADMIN") ? (int?)null : int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
         return Ok(await _paymentService.GetPaymentStatusAsync(id, requestingDoctorId));
     }
-    //TO BE REMOVED: dummy signature generator
-    [HttpGet("test-signature")]
-    public IActionResult TestSignature(string orderId, string paymentId)
-    {
-        var payload = $"{orderId}|{paymentId}";
-        var secret = _configuration["Razorpay:KeySecret"]!;
-
-        using var hmac = new HMACSHA256(Encoding.UTF8.GetBytes(secret));
-        var hash = hmac.ComputeHash(Encoding.UTF8.GetBytes(payload));
-
-        var signature = Convert.ToHexString(hash).ToLowerInvariant();
-
-        return Ok(signature);
-    }
+    
 }

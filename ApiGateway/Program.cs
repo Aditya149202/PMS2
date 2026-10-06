@@ -131,8 +131,7 @@ if (app.Environment.IsDevelopment())
         options.SwaggerEndpoint("/gateway.json", "PMS Combined API v1");
     });
 }
-
-app.UseHttpsRedirection();
+if (!app.Environment.IsDevelopment()) app.UseHttpsRedirection();
 app.UseRouting();
 app.UseAuthentication();
 app.UseAuthorization(); 

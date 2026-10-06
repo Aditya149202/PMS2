@@ -17,6 +17,7 @@ public class PaymentService : IPaymentService
     private readonly IOrderRepository _orderRepository;
     private readonly ISupplierInventoryClient _supplierInventoryClient;
     private readonly IPaymentGatewayClient _paymentGatewayClient;
+    private readonly IOrderEmailService _orderEmailService;
 
     public PaymentService(
         IPaymentIntentRepository paymentIntentRepository,
@@ -154,7 +155,7 @@ public class PaymentService : IPaymentService
 // eventually releases it, and no Order is ever created. Accepted for this project; a real
 // production system would pair this with a reconciliation job that periodically checks
 // Razorpay's API for payments with no matching completed Order.
-public async Task<PaymentStatusResponse> ConfirmPaymentAsync(int doctorId,string doctorName, PaymentConfirmRequest request)
+public async Task<PaymentStatusResponse> ConfirmPaymentAsync(int doctorId,string doctorName, PaymentConfirmRequest request,string? doctorEmail)
 {
     if (!_paymentGatewayClient.VerifySignature(request.RazorpayOrderId, request.RazorpayPaymentId, request.RazorpaySignature))
         throw new InvalidPaymentSignatureException();
@@ -198,7 +199,7 @@ public async Task<PaymentStatusResponse> ConfirmPaymentAsync(int doctorId,string
 
     await _orderRepository.AddAsync(order);
     await _orderRepository.SaveChangesAsync();
-
+    await _orderEmailService.SendOrderConfirmationAsync(doctorEmail, doctorName, order.Id, order.TotalAmount);
     return new PaymentStatusResponse(paymentIntent.Id, PaymentIntentStatus.PAID, order.Id);
 }
 

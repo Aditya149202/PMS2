@@ -30,7 +30,7 @@ builder.Services.AddScoped<IPaymentIntentRepository, PaymentIntentRepository>();
 // root namespace and this class's name.
 builder.Services.AddScoped<IOrderService, OrderService.Services.OrderService>();
 builder.Services.AddScoped<IPaymentService, PaymentService>();
-
+builder.Services.AddScoped<IOrderEmailService, OrderEmailService>();
 // ---------- Internal service-to-service client ----------
 // Shared-key auth, not JWT-forwarding — see prior decision. Attached once here at
 // HttpClient configuration time so it works identically for controller-triggered
