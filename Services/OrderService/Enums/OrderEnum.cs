@@ -23,3 +23,4 @@ public enum CancelledBy
 
     DOCTOR
 }
+public enum RefundStatus { PENDING, PROCESSED, FAILED }

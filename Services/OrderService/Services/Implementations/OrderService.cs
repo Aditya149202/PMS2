@@ -13,10 +13,13 @@ public class OrderService : IOrderService
     private readonly IOrderRepository _orderRepository;
     private readonly ISupplierInventoryClient _supplierInventoryClient;
 
+    private readonly IPaymentGatewayClient _paymentGatewayClient;
+
     public OrderService(IOrderRepository orderRepository, ISupplierInventoryClient supplierInventoryClient)
     {
         _orderRepository = orderRepository;
         _supplierInventoryClient = supplierInventoryClient;
+        _paymentGatewayClient = paymentGatewayClient;
     }
 
     public async Task<PagedResponse<OrderListItemResponse>> GetOrdersAsync(OrderFilterRequest request)
@@ -82,7 +85,8 @@ public class OrderService : IOrderService
 
         if (order.Status != OrderStatus.VERIFIED.ToString())
             throw new InvalidOrderStateException($"Order {id} cannot be pickedup from status {order.Status}. Only verified orders can be pickeup.");
-
+        if (order.RefundId is not null)
+    throw new InvalidOrderStateException($"Order {id} has been refunded and is awaiting cancellation.");
         await _supplierInventoryClient.CommitSaleAsync(order.Id, order.PaymentIntentId, order.TotalAmount);
 
         order.Status = OrderStatus.COMPLETED.ToString();
@@ -111,6 +115,22 @@ public class OrderService : IOrderService
     if (!allowedStatuses.Contains(Enum.Parse<OrderStatus>(order.Status, ignoreCase: true)))
         throw new InvalidOrderStateException($"Order {id} cannot be cancelled from status {order.Status} by {cancelledBy}.");
 
+        // Refund first and persist the refund id right away. A failure later in this method then leaves
+    // a retry-safe state: the retry sees RefundId and does not refund again. A refund failure here
+    // throws before anything has changed.
+    if (order.RefundId is null)
+    {
+        var paymentId = order.PaymentIntent.RazorpayPaymentId
+            ?? throw new InvalidOperationException($"Order {id} has no Razorpay payment id to refund.");
+
+        var refund = await _paymentGatewayClient.RefundAsync(paymentId, order.TotalAmount, $"refund_order_{order.Id}");
+        order.RefundId = refund.RefundId;
+        order.RefundStatus = Enum.TryParse<RefundStatus>(refund.Status, true, out var rs)
+            ? rs.ToString()
+            : RefundStatus.PENDING.ToString();
+        await _orderRepository.SaveChangesAsync();
+    }
+
     await _supplierInventoryClient.ReleaseReservationAsync(order.PaymentIntentId);
 
     order.Status = OrderStatus.CANCELLED.ToString();
@@ -128,7 +148,10 @@ public class OrderService : IOrderService
         o.VerifiedAt, o.CompletedAt, o.CancelledAt, o.CancelledBy is null
         ? null
         : Enum.Parse<CancelledBy>(o.CancelledBy, ignoreCase: true),
-        o.OrderItems.Select(i => new OrderItemResponse(i.DrugId, i.Quantity, i.UnitPriceAtOrder)).ToList());
+        o.OrderItems.Select(i => new OrderItemResponse(i.DrugId, i.Quantity, i.UnitPriceAtOrder)).ToList()
+            ,
+    o.RefundId,
+    o.RefundStatus is null ? null : Enum.Parse<RefundStatus>(o.RefundStatus, ignoreCase: true));
 
     private static OrderListItemResponse ToListItemResponse(Order o) => new(
         o.Id, o.DoctorId, o.DoctorNameSnapshot, Enum.Parse<OrderStatus>(o.Status, ignoreCase: true), o.TotalAmount, o.CreatedAt);

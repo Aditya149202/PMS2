@@ -13,4 +13,6 @@ public class MockPaymentGatewayClient : IPaymentGatewayClient
         // Simulate signature verification
         return true; // Always return true for the mock implementation
     }
+    public Task<PaymentGatewayRefund> RefundAsync(string gatewayPaymentId, decimal amount, string receipt)
+    => Task.FromResult(new PaymentGatewayRefund($"mock_refund_{Guid.NewGuid():N}", "PROCESSED"));
 }

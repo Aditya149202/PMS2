@@ -15,7 +15,7 @@ public class PaymentIntent
 
     public DateTime CreatedAt { get; set; }
     public DateTime UpdatedAt { get; set; }
-
+    public string DoctorNameSnapshot { get; set; } = default!;
     
     public Order? Order { get; set; }
 }

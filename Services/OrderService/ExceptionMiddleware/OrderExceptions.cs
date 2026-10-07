@@ -73,3 +73,9 @@ public class AppValidationException : AppException
       
     
 }
+
+/// <summary>502 — the payment gateway could not process a refund. Nothing was cancelled; retrying is safe.</summary>
+public class RefundFailedException : AppException
+{
+    public RefundFailedException(string message) : base(message, StatusCodes.Status502BadGateway) { }
+}

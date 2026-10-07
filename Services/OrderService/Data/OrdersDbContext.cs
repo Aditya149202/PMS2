@@ -75,6 +75,11 @@ public class OrdersDbContext : DbContext
             entity.Property(o => o.CreatedAt)
                 .HasDefaultValueSql("GETUTCDATE()");
 
+            entity.Property(o => o.RefundId).HasMaxLength(50);
+entity.Property(o => o.RefundStatus).HasMaxLength(10);
+entity.ToTable(t => t.HasCheckConstraint(
+    "CK_Orders_RefundStatus",
+    "RefundStatus IS NULL OR RefundStatus IN ('PENDING','PROCESSED','FAILED')"));
             entity.HasIndex(o => o.DoctorId);
             entity.HasIndex(o => o.Status);
             entity.HasIndex(o => new { o.DoctorId, o.Status });

@@ -14,13 +14,19 @@ public class OrderServiceTests
     private Mock<IOrderRepository> _orderRepo;
     private Mock<ISupplierInventoryClient> _supplierInventoryClient;
     private OrderServiceUnderTest _sut;
+    private Mock<IPaymentGatewayClient> _gatewayClient;
+
 
     [SetUp]
     public void Setup()
     {
         _orderRepo = new Mock<IOrderRepository>();
         _supplierInventoryClient = new Mock<ISupplierInventoryClient>();
-        _sut = new OrderServiceUnderTest(_orderRepo.Object, _supplierInventoryClient.Object);
+        _gatewayClient = new Mock<IPaymentGatewayClient>();
+_gatewayClient.Setup(g => g.RefundAsync(It.IsAny<string>(), It.IsAny<decimal>(), It.IsAny<string>()))
+    .ReturnsAsync(new PaymentGatewayRefund("rfnd_test", "PROCESSED"));
+
+        _sut = new OrderServiceUnderTest(_orderRepo.Object, _supplierInventoryClient.Object,_gatewayClient.Object);
     }
 
     private static Order MakeOrder(int id, OrderStatus status, int doctorId = 1) => new()
@@ -31,6 +37,8 @@ public class OrderServiceTests
         Status = status.ToString(),
         TotalAmount = 100m,
         PaymentIntentId = 50,
+        PaymentIntent = new PaymentIntent { Id = 50, RazorpayPaymentId = "pay_test" },
+
         CreatedAt = DateTime.UtcNow,
         OrderItems = new List<OrderItem>()
     };
@@ -132,4 +140,44 @@ public class OrderServiceTests
 
         Assert.ThrowsAsync<NotFoundException>(() => _sut.GetOrderByIdAsync(1, requestingDoctorId: 99));
     }
+    [Test]
+public async Task CancelOrderAsync_Should_Refund_Full_Amount_And_Record_It()
+{
+    var order = MakeOrder(1, OrderStatus.NEW);
+    _orderRepo.Setup(r => r.GetByIdAsync(1)).ReturnsAsync(order);
+
+    var result = await _sut.CancelOrderAsync(1, CancelledBy.ADMIN, requestingDoctorId: null);
+
+    _gatewayClient.Verify(g => g.RefundAsync("pay_test", 100m, "refund_order_1"), Times.Once);
+    Assert.That(result.RefundId, Is.EqualTo("rfnd_test"));
+    Assert.That(result.RefundStatus, Is.EqualTo(RefundStatus.PROCESSED));
+}
+
+[Test]
+public void CancelOrderAsync_Should_Not_Cancel_Or_Release_Stock_When_Refund_Fails()
+{
+    var order = MakeOrder(1, OrderStatus.NEW);
+    _orderRepo.Setup(r => r.GetByIdAsync(1)).ReturnsAsync(order);
+    _gatewayClient.Setup(g => g.RefundAsync(It.IsAny<string>(), It.IsAny<decimal>(), It.IsAny<string>()))
+        .ThrowsAsync(new RefundFailedException("gateway down"));
+
+    Assert.ThrowsAsync<RefundFailedException>(() => _sut.CancelOrderAsync(1, CancelledBy.ADMIN, null));
+
+    Assert.That(order.Status, Is.EqualTo(OrderStatus.NEW.ToString()));
+    _supplierInventoryClient.Verify(c => c.ReleaseReservationAsync(It.IsAny<int>()), Times.Never);
+}
+
+[Test]
+public async Task CancelOrderAsync_Should_Not_Refund_Twice_When_Refund_Already_Recorded()
+{
+    var order = MakeOrder(1, OrderStatus.NEW);
+    order.RefundId = "rfnd_existing";
+    order.RefundStatus = RefundStatus.PENDING.ToString();
+    _orderRepo.Setup(r => r.GetByIdAsync(1)).ReturnsAsync(order);
+
+    await _sut.CancelOrderAsync(1, CancelledBy.ADMIN, null);
+
+    _gatewayClient.Verify(g => g.RefundAsync(It.IsAny<string>(), It.IsAny<decimal>(), It.IsAny<string>()), Times.Never);
+    Assert.That(order.Status, Is.EqualTo(OrderStatus.CANCELLED.ToString()));
+}
 }

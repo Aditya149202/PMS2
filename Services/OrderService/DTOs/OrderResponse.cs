@@ -13,5 +13,7 @@ public record OrderResponse(
     DateTime? CompletedAt,
     DateTime? CancelledAt,
     CancelledBy? CancelledBy,
-    List<OrderItemResponse> Items
+    List<OrderItemResponse> Items,
+    string? RefundId,
+    RefundStatus? RefundStatus
 );

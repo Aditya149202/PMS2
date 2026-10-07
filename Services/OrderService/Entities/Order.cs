@@ -17,6 +17,8 @@ public class Order
     public DateTime? CancelledAt { get; set; }
 
     public string? CancelledBy { get; set; }
+    public string? RefundId { get; set; }
+public string? RefundStatus { get; set; }
 
     public PaymentIntent PaymentIntent { get; set; } = default!;
 
