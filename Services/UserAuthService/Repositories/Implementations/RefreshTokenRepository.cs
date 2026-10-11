@@ -27,5 +27,12 @@ public class RefreshTokenRepository:IRefreshTokenRepository
         await _context.SaveChangesAsync();
     }
 
-    
+    public async Task RemoveAllForUserAsync(int userId)
+    {
+        var tokens=await _context.RefreshTokens.Where(r=>r.UserId==userId && r.RevokedAt==null).ToListAsync();
+        foreach(var token in tokens)
+        {
+            token.RevokedAt=DateTime.UtcNow;
+        }
+    }
 }

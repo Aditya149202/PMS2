@@ -21,8 +21,11 @@ public class EmailService : IEmailService
     public async Task SendPasswordResetAsync(string toEmail, string rawResetToken)
     {
         // rawResetToken goes in a link the client builds, e.g. {frontendUrl}/reset?token={rawResetToken}
+        var url = _config["frontendUrl"];
+        var resetLink = $"{url}/auth/reset-password?token={Uri.EscapeDataString(rawResetToken)}";
+        
         var message = BuildMessage(toEmail, "Password Reset Request",
-            $"Use this token to reset your password: {rawResetToken}");
+            $@"Use this link to reset your password: {resetLink} This link will expire in 5 minutes.");
         await SendAsync(message);
     }
 

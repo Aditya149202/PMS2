@@ -38,7 +38,12 @@ public class AuthServiceTests
         _emailService = new Mock<IEmailService>();
 
         _passwordHasher = new PasswordHasher<User>();
-
+        var config=new ConfigurationBuilder()
+            .AddInMemoryCollection(new Dictionary<string, string>
+            {
+                { "frontendUrl", "http://localhost:4200" }
+            })
+            .Build();
         _authService = new AuthService(
             _userRepo.Object,
             _roleRepo.Object,
@@ -46,7 +51,8 @@ public class AuthServiceTests
             _passwordResetTokenRepo.Object,
             _tokenService.Object,
             _emailService.Object,
-            _passwordHasher);
+            _passwordHasher,
+            config);
     }
 
 

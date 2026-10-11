@@ -10,4 +10,6 @@ public interface IRefreshTokenRepository
     Task<RefreshToken?> GetByTokenHashAsync(string tokenHash);
 
     Task SaveChangesAsync();
+
+    Task RemoveAllForUserAsync(int userId);
 }

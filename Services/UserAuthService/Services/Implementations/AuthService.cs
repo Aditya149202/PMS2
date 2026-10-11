@@ -19,8 +19,10 @@ public class AuthService : IAuthService
     private readonly IEmailService _emailService;
     private readonly IPasswordHasher<User> _passwordHasher;
 
+    private readonly IConfiguration _config;
+
     public AuthService(IUserRepository userRepository,IRoleRepository roleRepository,IRefreshTokenRepository refreshTokenRepository,
-    IPasswordResetTokenRepository resetTokenRepository,ITokenService tokenService,IEmailService emailService,IPasswordHasher<User> passwordHasher)
+    IPasswordResetTokenRepository resetTokenRepository,ITokenService tokenService,IEmailService emailService,IPasswordHasher<User> passwordHasher,IConfiguration config)
     {
         _userRepository=userRepository;
         _roleRepository=roleRepository;
@@ -29,6 +31,7 @@ public class AuthService : IAuthService
         _passwordResetTokenRepository=resetTokenRepository;
         _passwordHasher=passwordHasher;
         _tokenService=tokenService;
+        _config=config;
     }
     public async Task<SignUpResponse> SignUpAsync(SignUpRequest request)
     {
@@ -124,9 +127,10 @@ public class AuthService : IAuthService
             TokenHash=_tokenService.HashToken(refresh),
             ExpiresAt=DateTime.UtcNow.AddMinutes(5)
         });
-        Console.WriteLine(refresh);
+        
         await _passwordResetTokenRepository.SaveChangesAsync();
-
+        var url=_config["frontendUrl"];
+        var resetLink=$"{url}/auth/reset-password?token={Uri.EscapeDataString(refresh)}";
         await _emailService.SendPasswordResetAsync(user.Email,refresh);
     }
 
@@ -143,6 +147,7 @@ public class AuthService : IAuthService
 
         reset.User.PasswordHash=_passwordHasher.HashPassword(reset.User,newPassword);
         reset.UsedAt=DateTime.UtcNow;
+        await _refreshTokenRepository.RemoveAllForUserAsync(reset.User.Id);
         await _passwordResetTokenRepository.SaveChangesAsync();
 
     }
